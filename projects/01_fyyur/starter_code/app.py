@@ -144,16 +144,11 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-  # seach for Hop should return "The Musical Hop".
-  # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-  response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
+  search_term = request.form.get('search_term', '')
+  results = db.session.query(Venue).filter(Venue.name.ilike('%' + search_term + '%')).all()
+  response = {
+      'count': len(results),
+      'data': results
   }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
@@ -227,23 +222,17 @@ def artists():
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-  # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
-  # search for "band" should return "The Wild Sax Band".
-  response={
-    "count": 1,
-    "data": [{
-      "id": 4,
-      "name": "Guns N Petals",
-      "num_upcoming_shows": 0,
-    }]
+  search_term = request.form.get('search_term', '')
+  results = db.session.query(Artist).filter(Artist.name.ilike('%' + search_term + '%')).all()
+  response = {
+      'count': len(results),
+      'data': results
   }
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-  # shows the artist page with the given artist_id
-  # TODO: replace with real artist data from the artist table, using artist_id
+
   artist = Artist.query.filter(Artist.id==artist_id).first()
   artist.genres = artist.genres.replace('{', '')
   artist.genres = artist.genres.replace('}', '')
@@ -289,6 +278,7 @@ def edit_artist_submission(artist_id):
         return redirect(url_for('edit_artist', artist_id=artist_id))
         
   return redirect(url_for('show_artist', artist_id=artist_id))
+
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
@@ -401,7 +391,7 @@ def shows():
 
 @app.route('/shows/create')
 def create_shows():
-  # renders form. do not touch.
+  
   form = ShowForm()
   return render_template('forms/new_show.html', form=form)
 
