@@ -384,7 +384,20 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-  return render_template('pages/shows.html')
+  data = []
+  shows = Shows.query.order_by(Shows.start_time.desc()).all()
+  for show in shows:
+    venue = Venue.query.filter_by(id=show.venue_id).first_or_404()
+    artist = Artist.query.filter_by(id=show.artist_id).first_or_404()
+    data.extend([{
+      "venue_id": venue.id,
+      "venue_name": venue.name,
+      "artist_id": artist.id,
+      "artist_name": artist.name,
+      "artist_image_link": artist.image_link,
+      "start_time": show.start_time.strftime("%m/%d/%Y, %H:%M")
+    }])
+  return render_template('pages/shows.html', shows=data)
 
 @app.route('/shows/create')
 def create_shows():
