@@ -293,15 +293,47 @@ def edit_artist_submission(artist_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
   form = VenueForm()
-  # }
-  # TODO: populate form with values from venue with ID <venue_id>
-  return render_template('forms/edit_venue.html', form=form)
+
+  venue = Venue.query.filter(Venue.id==venue_id).first()
+  return render_template('forms/edit_venue.html', form=form, venue=venue)
+
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-  # TODO: take values from the form submitted, and update existing
-  # venue record with ID <venue_id> using the new attributes
-  return redirect(url_for('show_venue', venue_id=venue_id))
+    error = False
+    form = VenueForm(request.form)
+
+    if form.validate():
+      try:
+        venue = {
+        "name": request.form['name'],
+        "city": request.form['city'],
+        "state": request.form['state'],
+        "phone": request.form['phone'],
+        "address": request.form['address'],
+        "genres": request.form['genres'],
+        "image_link": request.form['image_link'],
+        "facebook_link": request.form['facebook_link'],
+        "seeking_talent": True if request.form.get('seeking_talent') == 'y' else False,
+        "website_link": request.form['website_link'],
+        "seeking_description": request.form['seeking_description'],
+      }
+        Venue.query.filter_by(id=venue_id).update(venue)
+        db.session.commit()
+        flash('Venue: ' + request.form['name'] + ' was successfully updated')
+      except Exception as e:
+        db.session.rollback()
+        error = True
+        print(f'Error ==> {e}')
+        flash('Venue: ' + request.form['name'] + ' was not successfully updated')
+      finally:
+        db.session.close()
+    else: 
+      for error in form.errors:
+        flash(form.errors[error][0])
+      return redirect(url_for('edit_venue', venue_id=venue_id))
+        
+    return redirect(url_for('show_venue', venue_id=venue_id))
 
 #  Create Artist
 #  ----------------------------------------------------------------
