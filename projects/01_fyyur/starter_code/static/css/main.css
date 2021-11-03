@@ -194,6 +194,16 @@ h2.monospace {
 .tile img {
   max-height: 200px;
 }
+.home-tile {
+  text-align: center;
+  padding: 10px 25px;
+  border: solid 1px #ebebeb;
+  height: 180px;
+  margin-bottom: 15px;
+}
+.home-tile img {
+  max-height: 100px;
+}
 .form-wrapper {
   max-width: 400px;
 }
