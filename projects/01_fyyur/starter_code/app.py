@@ -112,8 +112,6 @@ def search_venues():
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
   venue = Venue.query.filter(Venue.id==venue_id).first()
-  # venue.genres = venue.genres.replace('{', '')
-  # venue.genres = venue.genres.replace('}', '')
   datas = Shows.query.join("artist").join("venue"). \
         add_columns(Artist.name, Artist.image_link, Venue.id). \
         filter(Venue.id == venue_id). \
@@ -209,7 +207,6 @@ def delete_venue(venue_id):
 def artists():
     artists = Artist.query.order_by(Artist.id.asc()).all()
     return render_template('pages/artists.html', artists=artists)
-  # TODO: replace with real data returned from querying the database
   
 
 @app.route('/artists/search', methods=['POST'])
@@ -226,8 +223,6 @@ def search_artists():
 def show_artist(artist_id):
 
   artist = Artist.query.filter(Artist.id==artist_id).first()
-  artist.genres = artist.genres.replace('{', '')
-  artist.genres = artist.genres.replace('}', '')
   datas = Shows.query.join("artist").join("venue"). \
         add_columns(Venue.name, Venue.image_link, Artist.id). \
         filter(Artist.id == artist_id). \
@@ -420,9 +415,7 @@ def create_shows():
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
   form =ShowForm(request.form)
-  date_format = '%Y-%m-%d %H:%M:%S'
   error = False
-
   if form.validate():
         try:
             show = Shows(
