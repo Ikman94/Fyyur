@@ -73,7 +73,7 @@ class Artist(db.Model):
     website_link = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean())
     seeking_description = db.Column(db.String(500))
-    venue_show = db.relationship('Shows', backref='artist', lazy=True)
+    artist_show = db.relationship('Shows', backref='artist', lazy=True)
 
 class Shows(db.Model):
     __tablename__ ='Shows'
@@ -107,7 +107,9 @@ app.jinja_env.filters['datetime'] = format_datetime
 
 @app.route('/')
 def index():
-  return render_template('pages/home.html')
+  venues = Venue.query.order_by(Venue.id.desc()).limit(10)
+  artists = Artist.query.order_by(Artist.id.desc()).limit(10)
+  return render_template('pages/home.html', venues=venues, artists=artists)
 
 
 #  Venues
@@ -157,6 +159,40 @@ def show_venue(venue_id):
   venue = Venue.query.filter(Venue.id==venue_id).first()
   venue.genres = venue.genres.replace('{', '')
   venue.genres = venue.genres.replace('}', '')
+  datas = Shows.query.join("artist").join("venue"). \
+        add_columns(Artist.name, Artist.image_link, Venue.id). \
+        filter(Venue.id == venue_id). \
+        filter(Shows.start_time >= datetime.now()).all()
+
+  upcoming_shows = []
+  for item in datas:
+        upcoming_shows.append({
+            'artist_id': item[0].artist_id,
+            'artist_name': item[1],
+            'artist_image_link': item[2],
+            'start_time': format_datetime(str(item[0].start_time))
+  })
+
+  venue.upcoming_shows_count = len(upcoming_shows)
+  venue.upcoming_shows = upcoming_shows
+
+  datas = Shows.query.join("artist").\
+        join("venue"). \
+        add_columns(Artist.name, Artist.image_link, Venue.id). \
+        filter(Venue.id == venue_id). \
+        filter(Shows.start_time < datetime.now()).all()
+
+  past_shows = []
+  for item in datas:
+        past_shows.append({
+            'artist_id': item[0].artist_id,
+            'artist_name': item[1],
+            'artist_image_link': item[2],
+            'start_time': format_datetime(str(item[0].start_time))
+      })
+
+  venue.past_shows_count = len(past_shows)
+  venue.past_shows = past_shows
   return render_template('pages/show_venue.html', venue=venue)
 
 #  Create Venue
@@ -236,6 +272,40 @@ def show_artist(artist_id):
   artist = Artist.query.filter(Artist.id==artist_id).first()
   artist.genres = artist.genres.replace('{', '')
   artist.genres = artist.genres.replace('}', '')
+  datas = Shows.query.join("artist").join("venue"). \
+        add_columns(Venue.name, Venue.image_link, Artist.id). \
+        filter(Artist.id == artist_id). \
+        filter(Shows.start_time >= datetime.now()).all()
+
+  upcoming_shows = []
+  for item in datas:
+        upcoming_shows.append({
+            'venue_id': item[0].venue_id,
+            'venue_name': item[1],
+            'venue_image_link': item[2],
+            'start_time': format_datetime(str(item[0].start_time))
+  })
+
+  artist.upcoming_shows_count = len(upcoming_shows)
+  artist.upcoming_shows = upcoming_shows
+
+  datas = Shows.query.join("artist").\
+        join("venue"). \
+        add_columns(Venue.name, Venue.image_link, Artist.id). \
+        filter(Artist.id == artist_id). \
+        filter(Shows.start_time < datetime.now()).all()
+
+  past_shows = []
+  for item in datas:
+        past_shows.append({
+            'venue_id': item[0].venue_id,
+            'venue_name': item[1],
+            'venue_image_link': item[2],
+            'start_time': format_datetime(str(item[0].start_time))
+      })
+
+  artist.past_shows_count = len(past_shows)
+  artist.past_shows = past_shows
   return render_template('pages/show_artist.html', artist=artist)
 
 #  Update
@@ -391,7 +461,7 @@ def shows():
 
 @app.route('/shows/create')
 def create_shows():
-  
+
   form = ShowForm()
   return render_template('forms/new_show.html', form=form)
 
