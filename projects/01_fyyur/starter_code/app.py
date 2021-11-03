@@ -15,7 +15,8 @@ import babel
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
+from flask.json import jsonify
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
@@ -23,6 +24,10 @@ from logging import Formatter, FileHandler
 from flask_migrate import Migrate
 from flask_wtf import Form, CSRFProtect
 from forms import *
+from models.model import db, Artist, Venue, Shows
+# from models.venue import db, Venue
+# from models.shows import db, Shows
+
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -31,61 +36,11 @@ app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db)
 csrf = CSRFProtect(app)
 
 # TODO: connect to a local postgresql database
-
-#----------------------------------------------------------------------------#
-# Models.
-#----------------------------------------------------------------------------#
-
-class Venue(db.Model):
-    __tablename__ = 'Venue'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website_link = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean())
-    seeking_description = db.Column(db.String(500))
-    venue_show = db.relationship('Shows', backref='venue', lazy=True)
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-class Artist(db.Model):
-    __tablename__ = 'Artist'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website_link = db.Column(db.String(120))
-    seeking_venue = db.Column(db.Boolean())
-    seeking_description = db.Column(db.String(500))
-    artist_show = db.relationship('Shows', backref='artist', lazy=True)
-
-class Shows(db.Model):
-    __tablename__ ='Shows'
-
-    id = db.Column(db.Integer, primary_key=True)
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id', ondelete='CASCADE'), nullable=False)
-    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id', ondelete='CASCADE'), nullable=False)
-    start_time = db.Column(db.DateTime, nullable=False)
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -157,8 +112,8 @@ def search_venues():
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
   venue = Venue.query.filter(Venue.id==venue_id).first()
-  venue.genres = venue.genres.replace('{', '')
-  venue.genres = venue.genres.replace('}', '')
+  # venue.genres = venue.genres.replace('{', '')
+  # venue.genres = venue.genres.replace('}', '')
   datas = Shows.query.join("artist").join("venue"). \
         add_columns(Artist.name, Artist.image_link, Venue.id). \
         filter(Venue.id == venue_id). \
@@ -240,6 +195,7 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
+  # delete = 
   # TODO: Complete this endpoint for taking a venue_id, and using
   # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
 
@@ -251,7 +207,7 @@ def delete_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
-    artists = Artist.query.order_by(Artist.id.desc()).all()
+    artists = Artist.query.order_by(Artist.id.asc()).all()
     return render_template('pages/artists.html', artists=artists)
   # TODO: replace with real data returned from querying the database
   
@@ -435,12 +391,8 @@ def create_artist_submission():
             flash(form.errors[error][0])
 
         return render_template('forms/new_artist.html', form=form)
-  return render_template('pages/home.html')
+  return render_template('pages/artists.html')
   
-
-
-#  Shows
-#  ----------------------------------------------------------------
 
 @app.route('/shows')
 def shows():
