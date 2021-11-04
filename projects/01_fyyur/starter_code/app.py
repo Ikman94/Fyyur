@@ -76,7 +76,7 @@ def venues():
     units = set()
 
     for venue in venues:
-        units.add((venue.city, venue.state));
+        units.add((venue.city, venue.state))
 
     areas = []
     for unit in units:
@@ -97,7 +97,7 @@ def venues():
                     'num_upcoming_shows': num_shows
                 })
 
-    return  render_template('pages/venues.html', areas=areas);
+    return  render_template('pages/venues.html', areas=areas)
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
@@ -113,37 +113,29 @@ def search_venues():
 def show_venue(venue_id):
   venue = Venue.query.filter(Venue.id==venue_id).first()
   datas = Shows.query.join("artist").join("venue"). \
-        add_columns(Artist.name, Artist.image_link, Venue.id). \
-        filter(Venue.id == venue_id). \
-        filter(Shows.start_time >= datetime.now()).all()
+        add_columns(Artist.name, Artist.image_link, Venue.id, Shows.start_time). \
+        filter(Venue.id == venue_id).all()
 
   upcoming_shows = []
-  for item in datas:
-        upcoming_shows.append({
-            'artist_id': item[0].artist_id,
-            'artist_name': item[1],
-            'artist_image_link': item[2],
-            'start_time': format_datetime(str(item[0].start_time))
-  })
+  past_shows = []
 
+  for index, data in enumerate(datas):
+        if data[4] >= datetime.now():
+          upcoming_shows.append({
+            'artist_id': data[0].artist_id,
+            'artist_name': data[1],
+            'artist_image_link': data[2],
+            'start_time': format_datetime(str(data[0].start_time))
+        })
+        else:
+          past_shows.append({
+            'artist_id': data[0].artist_id,
+            'artist_name': data[1],
+            'artist_image_link': data[2],
+            'start_time': format_datetime(str(data[0].start_time))
+        })
   venue.upcoming_shows_count = len(upcoming_shows)
   venue.upcoming_shows = upcoming_shows
-
-  datas = Shows.query.join("artist").\
-        join("venue"). \
-        add_columns(Artist.name, Artist.image_link, Venue.id). \
-        filter(Venue.id == venue_id). \
-        filter(Shows.start_time < datetime.now()).all()
-
-  past_shows = []
-  for item in datas:
-        past_shows.append({
-            'artist_id': item[0].artist_id,
-            'artist_name': item[1],
-            'artist_image_link': item[2],
-            'start_time': format_datetime(str(item[0].start_time))
-      })
-
   venue.past_shows_count = len(past_shows)
   venue.past_shows = past_shows
   return render_template('pages/show_venue.html', venue=venue)
@@ -224,37 +216,29 @@ def show_artist(artist_id):
 
   artist = Artist.query.filter(Artist.id==artist_id).first()
   datas = Shows.query.join("artist").join("venue"). \
-        add_columns(Venue.name, Venue.image_link, Artist.id). \
-        filter(Artist.id == artist_id). \
-        filter(Shows.start_time >= datetime.now()).all()
+        add_columns(Venue.name, Venue.image_link, Artist.id, Shows.start_time). \
+        filter(Artist.id == artist_id).all()
 
   upcoming_shows = []
-  for item in datas:
-        upcoming_shows.append({
-            'venue_id': item[0].venue_id,
-            'venue_name': item[1],
-            'venue_image_link': item[2],
-            'start_time': format_datetime(str(item[0].start_time))
-  })
+  past_shows = []
+  for index, data in enumerate(datas):
+    if data[4] >= datetime.now():
+      upcoming_shows.append({
+            'venue_id': data[0].venue_id,
+            'venue_name': data[1],
+            'venue_image_link': data[2],
+            'start_time': format_datetime(str(data[0].start_time))
+    })
+    else:
+      past_shows.append({
+            'venue_id': data[0].venue_id,
+            'venue_name': data[1],
+            'venue_image_link': data[2],
+            'start_time': format_datetime(str(data[0].start_time))
+      })
 
   artist.upcoming_shows_count = len(upcoming_shows)
   artist.upcoming_shows = upcoming_shows
-
-  datas = Shows.query.join("artist").\
-        join("venue"). \
-        add_columns(Venue.name, Venue.image_link, Artist.id). \
-        filter(Artist.id == artist_id). \
-        filter(Shows.start_time < datetime.now()).all()
-
-  past_shows = []
-  for item in datas:
-        past_shows.append({
-            'venue_id': item[0].venue_id,
-            'venue_name': item[1],
-            'venue_image_link': item[2],
-            'start_time': format_datetime(str(item[0].start_time))
-      })
-
   artist.past_shows_count = len(past_shows)
   artist.past_shows = past_shows
   return render_template('pages/show_artist.html', artist=artist)
@@ -394,8 +378,8 @@ def shows():
   data = []
   shows = Shows.query.order_by(Shows.start_time.desc()).all()
   for show in shows:
-    venue = Venue.query.filter_by(id=show.venue_id).first_or_404()
-    artist = Artist.query.filter_by(id=show.artist_id).first_or_404()
+    venue = Venue.query.filter_by(id=show.venue_id).first()
+    artist = Artist.query.filter_by(id=show.artist_id).first()
     data.extend([{
       "venue_id": venue.id,
       "venue_name": venue.name,
