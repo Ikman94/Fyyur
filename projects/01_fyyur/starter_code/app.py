@@ -74,28 +74,24 @@ def index():
 def venues():
     venues = Venue.query.order_by(Venue.id.desc()).all()
     units = set()
-
+    areas = []
     for venue in venues:
         units.add((venue.city, venue.state))
 
-    areas = []
     for unit in units:
         areas.append({
             "city": unit[0],
             "state": unit[1],
             "venues": []
         })
-
-    num_shows = 0
-
+        
     for venue in venues:
         for area in areas:
             if area['city'] == venue.city and area['state'] == venue.state:
                 area['venues'].append({
                     'id': venue.id,
-                    'name': venue.name,
-                    'num_upcoming_shows': num_shows
-                })
+                    'name': venue.name
+            })
 
     return  render_template('pages/venues.html', areas=areas)
 
@@ -114,7 +110,7 @@ def show_venue(venue_id):
   venue = Venue.query.filter(Venue.id==venue_id).first()
   datas = Shows.query.join("artist").join("venue"). \
         add_columns(Artist.name, Artist.image_link, Venue.id, Shows.start_time). \
-        filter(Venue.id == venue_id).all()
+        filter(Venue.id == venue_id).order_by(Artist.id.asc()).all()
 
   upcoming_shows = []
   past_shows = []
