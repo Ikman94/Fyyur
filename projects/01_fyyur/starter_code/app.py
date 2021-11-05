@@ -13,14 +13,11 @@ logging.basicConfig(level=logging.DEBUG)
 import babel
 
 import json
-import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
 from flask.json import jsonify
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
-import logging
-from logging import Formatter, FileHandler
 from flask_migrate import Migrate
 from flask_wtf import Form, CSRFProtect
 from forms import *
@@ -72,7 +69,7 @@ def index():
 
 @app.route('/venues')
 def venues():
-    venues = Venue.query.order_by(Venue.id.desc()).all()
+    venues = Venue.query.order_by(Venue.state.desc(), Venue.city.asc()).all()
     units = set()
     areas = []
     for venue in venues:
