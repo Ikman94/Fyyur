@@ -22,6 +22,7 @@ from model import db, Artist, Venue, Show
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # db = SQLAlchemy(app)
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -95,21 +96,34 @@ def show_venue(venue_id):
   past_shows = []
   upcoming_shows = []
   for show in venue.shows:
+    temp_show = {
+        'artist_id': show.artist_id,
+        'artist_name': show.artist.name,
+        'artist_image_link': show.artist.image_link,
+        'start_time': show.start_time.strftime("%m/%d/%Y, %H:%M")
+    }
     if show.start_time <= datetime.now():
-        past_shows.append({
-          'artist_id': show.artist_id,
-        'artist_name': show.artist.name,
-        'artist_image_link': show.artist.image_link,
-        'start_time': show.start_time.strftime("%m/%d/%Y, %H:%M")
-        })
+        past_shows.append(temp_show)
     else:
-        upcoming_shows.append({
-          'artist_id': show.artist_id,
-        'artist_name': show.artist.name,
-        'artist_image_link': show.artist.image_link,
-        'start_time': show.start_time.strftime("%m/%d/%Y, %H:%M")
-        })
-  return render_template('pages/show_venue.html', venue=venue)
+        upcoming_shows.append(temp_show)
+
+  data = {
+    "id" : venue.id,
+    "name": venue.name,
+    "genres": venue.genres,
+    "city": venue.city,
+    "phone": venue.phone,
+    "website_link": venue.website_link,
+    "facebook_link": venue.facebook_link,
+    "seeking_talent": venue.seeking_talent,
+    "seeking_description": venue.seeking_description,
+    "image_link": venue.image_link,
+    "upcoming_shows": upcoming_shows,
+    "past_shows": past_shows,
+    "upcoming_shows_count": len(upcoming_shows),
+    "past_shows_count": len(past_shows)
+  }
+  return render_template('pages/show_venue.html', venue=data)
 
 #  Create Venue
 #  ----------------------------------------------------------------
@@ -195,13 +209,31 @@ def show_artist(artist_id):
         'venue_id': show.venue_id,
         'venue_name': show.venue.name,
         'venue_image_link': show.venue.image_link,
-        'start_time': show.start_time
+        'start_time': show.start_time.strftime("%m/%d/%Y, %H:%M")
     }
     if show.start_time <= datetime.now():
         past_shows.append(temp_show)
     else:
         upcoming_shows.append(temp_show)
-  return render_template('pages/show_artist.html', artist=artist)
+
+  data = {
+    "id" : artist.id,
+    "name": artist.name,
+    "genres": artist.genres,
+    "city": artist.city,
+    "phone": artist.phone,
+    "website_link": artist.website_link,
+    "facebook_link": artist.facebook_link,
+    "seeking_venue": artist.seeking_venue,
+    "seeking_description": artist.seeking_description,
+    "image_link": artist.image_link,
+    "upcoming_shows": upcoming_shows,
+    "past_shows": past_shows,
+    "upcoming_shows_count": len(upcoming_shows),
+    "past_shows_count": len(past_shows)
+
+  }
+  return render_template('pages/show_artist.html', artist=data)
 
 #  Update
 #  ----------------------------------------------------------------
