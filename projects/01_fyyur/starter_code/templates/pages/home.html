@@ -43,7 +43,6 @@
 				<div class="home-tile home-tile-show">
 					<img src="{{ artist.image_link }}" alt="Venue Image" />
 					<h5><a href="{{ url_for('show_artist', artist_id=artist.id) }}">{{ artist.name }}</a></h5>
-					<h6>{{ artist.genres }}</h6>
 				</div>
 			</div>
 			{% endfor %}

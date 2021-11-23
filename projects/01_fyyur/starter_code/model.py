@@ -27,9 +27,6 @@ class Venue(db.Model):
         lazy='joined', 
         cascade="all, delete"
     )
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
     
 class Artist(db.Model):
     __tablename__ = 'artist'
