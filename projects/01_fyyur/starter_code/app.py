@@ -4,7 +4,15 @@
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import (
+    Flask, 
+    render_template, 
+    request, 
+    Response, 
+    flash, 
+    redirect, 
+    url_for
+)
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
@@ -22,8 +30,6 @@ from model import db, Artist, Venue, Show
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-# db = SQLAlchemy(app)
 db.init_app(app)
 migrate = Migrate(app, db)
 csrf = CSRFProtect(app)
@@ -112,6 +118,8 @@ def show_venue(venue_id):
     "name": venue.name,
     "genres": venue.genres,
     "city": venue.city,
+    "state": venue.state,
+    "address": venue.address,
     "phone": venue.phone,
     "website_link": venue.website_link,
     "facebook_link": venue.facebook_link,
@@ -141,17 +149,17 @@ def create_venue_submission():
   if form.validate():
     try:
             venue = Venue(
-                name  = request.form['name'],
-                city  = request.form['city'],
-                state = request.form['state'],
-                phone = request.form['phone'],
-                address = request.form['address'],
-                genres= request.form.getlist('genres'),
-                image_link    = request.form['image_link'],
-                facebook_link = request.form['facebook_link'],
-                seeking_talent = True if request.form.get('seeking_talent') == 'true' else False,
-                website_link  = request.form['website_link'],
-                seeking_description = request.form['seeking_description'])
+                name  = form.name.data,
+                city  = form.city.data,
+                state = form.state.data,
+                phone = form.phone.data,
+                address = form.address.data,
+                genres = form.state.data,
+                image_link = form.image_link.data,
+                facebook_link = form.facebook_link.data,
+                seeking_talent = True if form.seeking_talent.get('seeking_talent') == 'y' else False,
+                website_link  = form.website_link.data,
+                seeking_description = form.seeking_description.data)
             db.session.add(venue)
             db.session.commit()
             flash('The ' + request.form['name'] + ' Venue was successfully listed!')
@@ -163,10 +171,11 @@ def create_venue_submission():
     finally:
       db.session.close()
   else:
-        for error in form.errors:
-            flash(form.errors[error][0])
-
-        return render_template('forms/new_venue.html', form=form)
+      message = []
+      for field, err in form.errors.items():
+          message.append(field + ' ' + '|'.join(err))
+      flash('Errors ' + str(message))
+      return render_template('pages/new_venue.html')
   return render_template('pages/venues.html')
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
