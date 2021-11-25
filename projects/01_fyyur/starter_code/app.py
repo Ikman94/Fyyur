@@ -76,12 +76,18 @@ def venues():
     areas.append({
         'city': place.city,
         'state': place.state,
-        'venues': [{
-            'id': venue.id,
-            'name': venue.name
-        } for venue in venues if
-            venue.city == place.city and venue.state == place.state]
+        'venues': []
     })
+
+  for venue in venues:
+        for area in areas:
+            if area['city'] == venue.city and area['state'] == venue.state:
+                area['venues'].append({
+                    'id': venue.id,
+                    'name': venue.name,
+                    'num_upcoming_shows': len([show for show in 
+                    venue.shows if show.start_time > datetime.now()])
+                })
   return render_template('pages/venues.html', areas=areas)
 
 # 2)
