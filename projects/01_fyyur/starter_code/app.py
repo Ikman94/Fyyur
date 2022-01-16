@@ -181,7 +181,7 @@ def create_venue_submission():
       for field, err in form.errors.items():
           message.append(field + ' ' + '|'.join(err))
       flash('Errors ' + str(message))
-      return render_template('pages/new_venue.html')
+      return render_template('forms/new_venue.html', form=form)
   return render_template('pages/venues.html')
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
@@ -367,7 +367,7 @@ def create_artist_submission():
             db.session.add(artist)
             db.session.commit()
             flash('Artist ' + request.form['name'] + ' was successfully listed!')
-            return render_template('pages/home.html')
+            return render_template('pages/artists.html')
         except ValueError as e:
             db.session.rollback()
             flash('An error occurred. Artist ' + request.form['name'] + ' could not be listed.')
